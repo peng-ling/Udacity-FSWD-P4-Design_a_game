@@ -68,3 +68,25 @@ More on decorators:
 ## Google Protocol RPC Library Overview
 
 [The Google Protocol RPC library is a framework for implementing HTTP-based remote procedure call (RPC) services. An RPC service is a collection of message types and remote methods that provide a structured way for external applications to interact with web applications. Because you can define messages and services in the Python programming language, it's easy to develop Protocol RPC services, test those services, and scale them on App Engine.](https://cloud.google.com/appengine/docs/python/tools/protorpc/)
+
+## api explorer
+
+http://localhost:8080/_ah/api/explorer
+
+## Chrome needs to be started in a special way to use api explorer
+
+How do I use Explorer with a local HTTP API?
+
+If you use Google Cloud Endpoints, and you are running your Endpoint in a development server, your browser may complain about mixed content. Explorer is loaded over HTTPS, but your API (when running locally) is hosted on HTTP.
+
+To resolve this, using Chrome, you must start a Chrome session with special flags as follows:
+
+[path-to-Chrome] --user-data-dir=test --unsafely-treat-insecure-origin-as-secure=http://localhost:port
+or a more concrete example:
+
+ /usr/bin/google-chrome-stable --user-data-dir=test --unsafely-treat-insecure-origin-as-secure=http://localhost:8080
+You should only do this for local testing purposes, in which case you can ignore the warning banner displayed in the browser.
+
+## Google Hello World example
+
+[It is a Python "Hello World" skeleton application for Google App Engine using Google Cloud Endpoints, available from Google Cloud GitHub repository](https://github.com/GoogleCloudPlatform/appengine-endpoints-helloendpoints-python)
