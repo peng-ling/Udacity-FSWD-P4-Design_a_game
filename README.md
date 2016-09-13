@@ -24,13 +24,21 @@
 
 [SDK - download and install Google App Engine SDK for Python](https://cloud.google.com/appengine/downloads)
 
+https://cloud.google.com/appengine/downloads#Google_App_Engine_SDK_for_Python
+
 Running Google App Engine on Mac OS
 Unfortunately Google no longer supports the GoogleAppengineLauncher program that Karl mentions in this video. You follow use the instructions below for Linux, or you can download the deprecated GoogleAppengineLauncher installer from the "Supporting Materials" list below. Warning: Use the GoogleAppengineLauncher program at your own peril! As Google no longer supports the tool it may stop working in the future.
 
 Running Google App Engine on Linux
+
+On Mac set path to appengine:
+
+export PATH=$PATH:/Users/paulengling/Documents/Udacity/FSWD/P4/google_appengine/
+
 To run the Development Web Server locally, run:
 
-dev_appserver.py myapp
+dev_appserver.py myapp (app.yaml)
+
 Where myapp is the name you want your app to have.
 
 To upload your code to Google App Engine, run:
@@ -90,3 +98,21 @@ You should only do this for local testing purposes, in which case you can ignore
 ## Google Hello World example
 
 [It is a Python "Hello World" skeleton application for Google App Engine using Google Cloud Endpoints, available from Google Cloud GitHub repository](https://github.com/GoogleCloudPlatform/appengine-endpoints-helloendpoints-python)
+
+##Setting up Oauth for app Engine
+
+1. [Set up consent screen here](https://console.developers.google.com/apis/credentials/consent?project=devscalappswithpython)
+2. Create Client Id
+3. Select Add credentials and choose OAuth 2.0 client ID
+4. Select Web application for the Application type
+5. In the Authorized JavaScript origins field include these two URLs: https://YOUR_PROJECT_ID.appspot.com/ and http://localhost:8080/ (be sure to replace 8080 with the port for your application)
+6. In the Authorized redirect URIs field include these two URLs: https://YOUR_PROJECT_ID.appspot.com/oauth2callback and http://localhost:8080/oauth2callback (be sure to replace 8080 with the port for your application)
+7. Click Create
+
+###Final Step
+1. Copy the long client ID that ends with "googleusercontent.com""
+2. Go to your settings.py file
+3. Replace the string 'replace with Web client ID' with your client ID as a string
+4. Save settings.py
+
+##Storing and retreiving data
