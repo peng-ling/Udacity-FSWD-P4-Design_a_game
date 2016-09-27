@@ -46,6 +46,12 @@ To upload your code to Google App Engine, run:
 appcfg.py update helloworld/
 Where helloworld/ is the directory you're running your web app from.
 
+start chrome
+
+open /Applications/Google\ Chrome.app --args  --unsafely-treat-insecure-origin-as-secure=http://localhost:8000
+
+goto api explorer https://apis-explorer.appspot.com/apis-explorer/?base=http%3A%2F%2Flocalhost%3A8080%2F_ah%2Fapi#p/
+
 Further help is available [here](https://developers.google.com/appengine/docs/python/tools/devserver) and [here](https://developers.google.com/appengine/docs/python/gettingstartedpython27/uploading)
 
 ## Course Repository
@@ -116,3 +122,24 @@ You should only do this for local testing purposes, in which case you can ignore
 4. Save settings.py
 
 ##Storing and retreiving data
+
+### BigTable
+
+[BigTable white paper](http://research.google.com/archive/bigtable.html)
+
+[Documentation for Properties and value types](https://cloud.google.com/appengine/docs/python/ndb/properties#types)
+
+https://cloud.google.com/appengine/docs/python/datastore/
+
+[Link to google cloud datastore](https://console.cloud.google.com/datastore)
+
+[Documentation of google.appengine.ext.ndb package]
+(https://cloud.google.com/appengine/docs/python/refdocs/google.appengine.ext.ndb)
+
+###Datastore eventual vs. strong consistency
+
+https://cloud.google.com/datastore/docs/concepts/structuring_for_strong_consistency
+
+### Datastore transactions
+
+1) Done by function decorators: @ndb.transactional(xg=false/true)
