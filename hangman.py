@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from string import replace
 from wordlist import w
 import random
 
