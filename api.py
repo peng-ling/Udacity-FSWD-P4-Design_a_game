@@ -11,9 +11,9 @@ from protorpc import remote, messages
 from google.appengine.api import memcache
 from google.appengine.api import taskqueue
 
-from models import User, Game, Score
+from models import User, Game, Score, Move
 from models import StringMessage, NewGameForm, GameForm, MakeMoveForm,\
-    ScoreForms
+    ScoreForms, MoveForm
 from utils import get_by_urlsafe
 
 NEW_GAME_REQUEST = endpoints.ResourceContainer(NewGameForm)
@@ -24,6 +24,10 @@ MAKE_MOVE_REQUEST = endpoints.ResourceContainer(
     urlsafe_game_key=messages.StringField(1),)
 USER_REQUEST = endpoints.ResourceContainer(user_name=messages.StringField(1),
                                            email=messages.StringField(2))
+
+GET_MOVE_REQUEST = endpoints.ResourceContainer(MoveForm,
+    urlsafe_game_key=messages.StringField(1),)
+
 
 MEMCACHE_MOVES_REMAINING = 'MOVES_REMAINING'
 
@@ -151,6 +155,19 @@ class GuessANumberApi(remote.Service):
             average = float(total_attempts_remaining)/count
             memcache.set(MEMCACHE_MOVES_REMAINING,
                          'The average moves remaining is {:.2f}'.format(average))
-
+# Own Code Start
+    @endpoints.method(request_message=GET_MOVE_REQUEST,
+                      response_message=MoveForm,
+                      path='move/{urlsafe_game_key}',
+                      name='get_move',
+                      http_method='GET')
+    def get_move(self, request):
+        """Return the current game state."""
+        move = get_by_urlsafe(request.urlsafe_game_key, Move)
+        if move:
+            return move.to_form('What a smart move!')
+        else:
+            raise endpoints.NotFoundException('Move not found!')
+# Own Code End
 
 api = endpoints.api_server([GuessANumberApi])

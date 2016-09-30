@@ -56,6 +56,7 @@ class Game(ndb.Model):
         score.put()
 
 
+
 class Score(ndb.Model):
     """Score object"""
     user = ndb.KeyProperty(required=True, kind='User')
@@ -101,6 +102,21 @@ class ScoreForm(messages.Message):
 class ScoreForms(messages.Message):
     """Return multiple ScoreForms"""
     items = messages.MessageField(ScoreForm, 1, repeated=True)
+
+class Move(ndb.Model):
+    game = ndb.KeyProperty(required=True, kind='Game')
+    no = ndb.IntegerProperty(required=True)
+    guess = ndb.StringProperty(required=True)
+    matchresult = ndb.StringProperty(required=True)
+    movesleft = ndb.IntegerProperty(required=True)
+
+class MoveForm(messages.Message):
+    urlsafe_key = messages.StringField(1, required=True)
+    no = messages.IntegerField(2)
+    guess = messages.StringField(3)
+    matchresult = messages.StringField(4)
+    movesleft = messages.IntegerField(5)
+
 
 
 class StringMessage(messages.Message):
