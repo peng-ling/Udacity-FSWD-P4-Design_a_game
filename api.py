@@ -105,11 +105,31 @@ class HangmanApi(remote.Service):
             return _game.to_form("%s has been guessed before" %request.guess)
         else:
             _matchresult = matchresult(_game.target, _game.key, request.guess)
+#Hier gehts weiter
+            _noMoves = Move.query(Move.game == _game.key)
+
+            _nextNoList = ""
+            _nextNo = '0'
+
+            if _noMoves is None:
+                print('NONE BAZINGA')
+                _nextNo = '0'
+            else:
+
+                for n in _noMoves:
+                    print('BAZINGA')
+                    _nextNoList += str(n.no)
+
+                _nextNo = int(max(list(_nextNoList))) + 1
+                print('Yo NO!!!!!')
+                print(_nextNo)
+
+
             
 
         _move = Move(
             game = _game.key,
-            no = 1,
+            no = _nextNo,
             guess = request.guess,
             matchresult = _matchresult
         )
@@ -121,7 +141,7 @@ class HangmanApi(remote.Service):
         _game.attempts_remaining -= 1
 
 
-        if request.guess == _game.target:
+        if _matchresult == _game.target:
             _game.end_game(True)
             return _game.to_form('You win!')
 
