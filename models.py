@@ -7,6 +7,8 @@ from datetime import date
 from protorpc import messages
 from google.appengine.ext import ndb
 
+from wordlist import w
+
 
 class User(ndb.Model):
     """User profile"""
@@ -16,21 +18,22 @@ class User(ndb.Model):
 
 class Game(ndb.Model):
     """Game object"""
-    target = ndb.IntegerProperty(required=True)
+    target = ndb.StringProperty(required=True)
     attempts_allowed = ndb.IntegerProperty(required=True)
-    attempts_remaining = ndb.IntegerProperty(required=True, default=5)
+    attempts_remaining = ndb.IntegerProperty(required=True)
     game_over = ndb.BooleanProperty(required=True, default=False)
     user = ndb.KeyProperty(required=True, kind='User')
 
     @classmethod
-    def new_game(cls, user, min, max, attempts):
+    def new_game(cls, user):
         """Creates and returns a new game"""
-        if max < min:
-            raise ValueError('Maximum must be greater than minimum')
+        _secretWord = random.choice(w)
+        _attempts = len(_secretWord) +5
+
         game = Game(user=user,
-                    target=random.choice(range(1, max + 1)),
-                    attempts_allowed=attempts,
-                    attempts_remaining=attempts,
+                    target=_secretWord,
+                    attempts_allowed=_attempts,
+                    attempts_remaining=_attempts ,
                     game_over=False)
         game.put()
         return game
@@ -81,14 +84,12 @@ class GameForm(messages.Message):
 class NewGameForm(messages.Message):
     """Used to create a new game"""
     user_name = messages.StringField(1, required=True)
-    min = messages.IntegerField(2, default=1)
-    max = messages.IntegerField(3, default=10)
-    attempts = messages.IntegerField(4, default=5)
+
 
 
 class MakeMoveForm(messages.Message):
     """Used to make a move in an existing game"""
-    guess = messages.IntegerField(1, required=True)
+    guess = messages.StringField(1, required=True)
 
 
 class ScoreForm(messages.Message):
@@ -108,14 +109,26 @@ class Move(ndb.Model):
     no = ndb.IntegerProperty(required=True)
     guess = ndb.StringProperty(required=True)
     matchresult = ndb.StringProperty(required=True)
-    movesleft = ndb.IntegerProperty(required=True)
+
+    def to_form(self, message):
+        form = MoveForm()
+
+        form.urlsafe_key = self.key.urlsafe(), 
+        form.no=self.no,
+        form.guess=self.guess, 
+        form.matchresult=self.matchresult,
+        form.movesleft = self.movesleft
+
+        return form
+
 
 class MoveForm(messages.Message):
-    urlsafe_key = messages.StringField(1, required=True)
+    #urlsafe_key = messages.StringField(1, required=True)
     no = messages.IntegerField(2)
     guess = messages.StringField(3)
     matchresult = messages.StringField(4)
     movesleft = messages.IntegerField(5)
+
 
 
 

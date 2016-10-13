@@ -14,7 +14,8 @@ from google.appengine.api import taskqueue
 from models import User, Game, Score, Move
 from models import StringMessage, NewGameForm, GameForm, MakeMoveForm,\
     ScoreForms, MoveForm
-from utils import get_by_urlsafe
+from utils import get_by_urlsafe, check_if_guessed_before, matchresult
+
 
 NEW_GAME_REQUEST = endpoints.ResourceContainer(NewGameForm)
 GET_GAME_REQUEST = endpoints.ResourceContainer(
@@ -31,8 +32,10 @@ GET_MOVE_REQUEST = endpoints.ResourceContainer(MoveForm,
 
 MEMCACHE_MOVES_REMAINING = 'MOVES_REMAINING'
 
-@endpoints.api(name='guess_a_number', version='v1')
-class GuessANumberApi(remote.Service):
+_allowedLetters='abcdefghijklmnopqrstuvwxyz'
+
+@endpoints.api(name='hangman', version='v1')
+class HangmanApi(remote.Service):
     """Game API"""
     @endpoints.method(request_message=USER_REQUEST,
                       response_message=StringMessage,
@@ -60,12 +63,9 @@ class GuessANumberApi(remote.Service):
         if not user:
             raise endpoints.NotFoundException(
                     'A User with that name does not exist!')
-        try:
-            game = Game.new_game(user.key, request.min,
-                                 request.max, request.attempts)
-        except ValueError:
-            raise endpoints.BadRequestException('Maximum must be greater '
-                                                'than minimum!')
+        
+        game = Game.new_game(user.key)
+        
 
         # Use a task queue to update the average attempts remaining.
         # This operation is not needed to complete the creation of a new game
@@ -80,9 +80,9 @@ class GuessANumberApi(remote.Service):
                       http_method='GET')
     def get_game(self, request):
         """Return the current game state."""
-        game = get_by_urlsafe(request.urlsafe_game_key, Game)
-        if game:
-            return game.to_form('Time to make a move!')
+        _game = get_by_urlsafe(request.urlsafe_game_key, Game)
+        if _game:
+            return _game.to_form('Time to make a move!')
         else:
             raise endpoints.NotFoundException('Game not found!')
 
@@ -93,26 +93,49 @@ class GuessANumberApi(remote.Service):
                       http_method='PUT')
     def make_move(self, request):
         """Makes a move. Returns a game state with message"""
-        game = get_by_urlsafe(request.urlsafe_game_key, Game)
-        if game.game_over:
-            return game.to_form('Game already over!')
+        _game = get_by_urlsafe(request.urlsafe_game_key, Game)
+        if _game.game_over:
+            return _game.to_form('Game already over!')
 
-        game.attempts_remaining -= 1
-        if request.guess == game.target:
-            game.end_game(True)
-            return game.to_form('You win!')
-
-        if request.guess < game.target:
-            msg = 'Too low!'
+        if request.guess == '':
+            return _game.to_form('guess was empty!')
+        elif request.guess not in _allowedLetters:
+            return _game.to_form("%s is not allowed" %request.guess)
+        elif check_if_guessed_before(request.guess,_game.key) == 'NOK':
+            return _game.to_form("%s has been guessed before" %request.guess)
         else:
-            msg = 'Too high!'
+            _matchresult = matchresult(_game.target, _game.key, request.guess)
+            
 
-        if game.attempts_remaining < 1:
-            game.end_game(False)
-            return game.to_form(msg + ' Game over!')
+        _move = Move(
+            game = _game.key,
+            no = 1,
+            guess = request.guess,
+            matchresult = _matchresult
+        )
+        print('put da move yo!')
+        _move.put()
+
+        _moves = Move.query(Move.game == _game.key)
+
+        _game.attempts_remaining -= 1
+
+
+        if request.guess == _game.target:
+            _game.end_game(True)
+            return _game.to_form('You win!')
+
+        if request.guess in _game.target:
+            msg = 'you found a new letter.'
         else:
-            game.put()
-            return game.to_form(msg)
+            msg = 'guessed letter is not part of the secret word.'
+
+        if _game.attempts_remaining < 1:
+            _game.end_game(False)
+            return _game.to_form(msg + ' Game over!')
+        else:
+            _game.put()
+            return _game.to_form(msg)
 
     @endpoints.method(response_message=ScoreForms,
                       path='scores',
@@ -170,4 +193,4 @@ class GuessANumberApi(remote.Service):
             raise endpoints.NotFoundException('Move not found!')
 # Own Code End
 
-api = endpoints.api_server([GuessANumberApi])
+api = endpoints.api_server([HangmanApi])
