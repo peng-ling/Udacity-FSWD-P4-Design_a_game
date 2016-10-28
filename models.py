@@ -38,7 +38,7 @@ class Game(ndb.Model):
         game.put()
         return game
 
-    def to_form(self, message):
+    def to_form(self, message, matchresult, guessedletters):
         """Returns a GameForm representation of the Game"""
         form = GameForm()
         form.urlsafe_key = self.key.urlsafe()
@@ -46,7 +46,20 @@ class Game(ndb.Model):
         form.attempts_remaining = self.attempts_remaining
         form.game_over = self.game_over
         form.message = message
+        form.matchresult = matchresult
+        form.guessedletters = guessedletters
         return form
+    
+    def to_delete_confirmation_form(self, message):
+        form = CancelGameConfirmationForm()
+        form.urlsafe_key = self.key.urlsafe()
+        form.message = message
+        return form
+
+
+
+
+
 
     def end_game(self, won=False):
         """Ends the game - if won is True, the player won. - if won is False,
@@ -77,13 +90,32 @@ class GameForm(messages.Message):
     urlsafe_key = messages.StringField(1, required=True)
     attempts_remaining = messages.IntegerField(2, required=True)
     game_over = messages.BooleanField(3, required=True)
-    message = messages.StringField(4, required=True)
+    message = messages.StringField(4)
     user_name = messages.StringField(5, required=True)
+    matchresult = messages.StringField(6)
+    guessedletters = messages.StringField(7)
+
+
+class GamesForm(messages.Message):
+    items = messages.MessageField(GameForm,1, repeated=True)
+    message = messages.StringField(2)
+
+
+
 
 
 class NewGameForm(messages.Message):
     """Used to create a new game"""
     user_name = messages.StringField(1, required=True)
+# CANCEL Game
+# cancel_game
+class CancelGameForm(messages.Message):
+    urlsafe_key = messages.StringField(1, required=True)
+
+
+class CancelGameConfirmationForm(messages.Message):
+    urlsafe_key = messages.StringField(1, required=True)
+    message = messages.StringField(2)
 
 
 
@@ -106,7 +138,7 @@ class ScoreForms(messages.Message):
 
 class Move(ndb.Model):
     game = ndb.KeyProperty(required=True, kind='Game')
-    no = ndb.IntegerProperty(required=True)
+    move_no = ndb.IntegerProperty(required=True)
     guess = ndb.StringProperty(required=True)
     matchresult = ndb.StringProperty(required=True)
 
@@ -114,20 +146,42 @@ class Move(ndb.Model):
         form = MoveForm()
 
         form.urlsafe_key = self.key.urlsafe(), 
-        form.no=self.no,
+        form.move_no=self.move_no,
         form.guess=self.guess, 
         form.matchresult=self.matchresult,
         form.movesleft = self.movesleft
 
         return form
+    
+    def to_form_hist(self):
+        form = MoveFormHist()
+        form.move_no = self.move_no
+        form.guess = self.guess
+        form.matchresult = self.matchresult
+        return form
+
+class MoveFormHist(messages.Message):
+ 
+    print(messages.IntegerField(2))
+    
+    move_no = messages.IntegerField(2)
+    guess = messages.StringField(3)
+    matchresult = messages.StringField(4)
+    movesleft = messages.IntegerField(5)
+
 
 
 class MoveForm(messages.Message):
     #urlsafe_key = messages.StringField(1, required=True)
-    no = messages.IntegerField(2)
+    move_no = messages.IntegerField(2)
     guess = messages.StringField(3)
     matchresult = messages.StringField(4)
     movesleft = messages.IntegerField(5)
+
+  
+
+class GameHistoryForm(messages.Message):
+    items = messages.MessageField(MoveFormHist,1, repeated=True)
 
 
 
@@ -135,3 +189,23 @@ class MoveForm(messages.Message):
 class StringMessage(messages.Message):
     """StringMessage-- outbound (single) string message"""
     message = messages.StringField(1, required=True)
+
+
+#Ranking
+
+
+class Ranking(ndb.Model):
+    """User profile"""
+    player_name = ndb.StringProperty(required=True)
+    player_ranking = ndb.IntegerProperty(required=True)
+    user = ndb.KeyProperty(required=True, kind='User')
+
+    def to_form(self):
+        return RankingForm(player_name = self.player_name, player_ranking = self.player_ranking)
+
+class RankingForm(messages.Message):
+    player_name = messages.StringField(1)
+    player_ranking = messages.IntegerField(2)
+
+class RankingsForm(messages.Message):
+    items = messages.MessageField(RankingForm,1, repeated=True)

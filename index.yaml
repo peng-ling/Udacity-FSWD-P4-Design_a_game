@@ -14,3 +14,14 @@ indexes:
   properties:
   - name: game_over
   - name: user
+
+- kind: Move
+  properties:
+  - name: game
+  - name: move_no
+
+- kind: Move
+  properties:
+  - name: game
+  - name: move_no
+    direction: desc

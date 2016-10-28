@@ -10,29 +10,49 @@ import endpoints
 from protorpc import remote, messages
 from google.appengine.api import memcache
 from google.appengine.api import taskqueue
+from google.appengine.ext import ndb
 
-from models import User, Game, Score, Move
+from models import User, Game, Score, Move, Ranking
+
 from models import StringMessage, NewGameForm, GameForm, MakeMoveForm,\
-    ScoreForms, MoveForm
-from utils import get_by_urlsafe, check_if_guessed_before, matchresult
+    ScoreForms, MoveForm, GamesForm, CancelGameConfirmationForm,\
+    RankingsForm, RankingForm, GameHistoryForm
+from utils import get_by_urlsafe, check_if_guessed_before, matchresult,\
+    guessedletters, compute_ranking
 
+GET_GAME_H = endpoints.ResourceContainer(
+    urlsafe_game_key=messages.StringField(1),)
 
 NEW_GAME_REQUEST = endpoints.ResourceContainer(NewGameForm)
+
 GET_GAME_REQUEST = endpoints.ResourceContainer(
-        urlsafe_game_key=messages.StringField(1),)
+    urlsafe_game_key=messages.StringField(1),)
+
 MAKE_MOVE_REQUEST = endpoints.ResourceContainer(
     MakeMoveForm,
     urlsafe_game_key=messages.StringField(1),)
+
 USER_REQUEST = endpoints.ResourceContainer(user_name=messages.StringField(1),
                                            email=messages.StringField(2))
 
+
 GET_MOVE_REQUEST = endpoints.ResourceContainer(MoveForm,
+                                               urlsafe_game_key=messages.StringField(1),)
+
+GET_USER_GAMES_REQUEST = endpoints.ResourceContainer(
+    user_name=messages.StringField(1))
+
+GET_HIGH_SCORE = endpoints.ResourceContainer(
+    limit=messages.IntegerField(1),)
+
+CANCEL_GAME = endpoints.ResourceContainer(
     urlsafe_game_key=messages.StringField(1),)
 
 
 MEMCACHE_MOVES_REMAINING = 'MOVES_REMAINING'
 
-_allowedLetters='abcdefghijklmnopqrstuvwxyz'
+_allowedLetters = 'abcdefghijklmnopqrstuvwxyz'
+
 
 @endpoints.api(name='hangman', version='v1')
 class HangmanApi(remote.Service):
@@ -46,11 +66,11 @@ class HangmanApi(remote.Service):
         """Create a User. Requires a unique username"""
         if User.query(User.name == request.user_name).get():
             raise endpoints.ConflictException(
-                    'A User with that name already exists!')
+                'A User with that name already exists!')
         user = User(name=request.user_name, email=request.email)
         user.put()
         return StringMessage(message='User {} created!'.format(
-                request.user_name))
+            request.user_name))
 
     @endpoints.method(request_message=NEW_GAME_REQUEST,
                       response_message=GameForm,
@@ -62,16 +82,15 @@ class HangmanApi(remote.Service):
         user = User.query(User.name == request.user_name).get()
         if not user:
             raise endpoints.NotFoundException(
-                    'A User with that name does not exist!')
-        
+                'A User with that name does not exist!')
+
         game = Game.new_game(user.key)
-        
 
         # Use a task queue to update the average attempts remaining.
         # This operation is not needed to complete the creation of a new game
         # so it is performed out of sequence.
         taskqueue.add(url='/tasks/cache_average_attempts')
-        return game.to_form('Good luck playing Guess a Number!')
+        return game.to_form('Good luck playing Hangman!', None, None)
 
     @endpoints.method(request_message=GET_GAME_REQUEST,
                       response_message=GameForm,
@@ -82,9 +101,10 @@ class HangmanApi(remote.Service):
         """Return the current game state."""
         _game = get_by_urlsafe(request.urlsafe_game_key, Game)
         if _game:
-            return _game.to_form('Time to make a move!')
+            return _game.to_form('Time to make a move!', None, None)
         else:
             raise endpoints.NotFoundException('Game not found!')
+# MAKE_MOVE_REQUEST
 
     @endpoints.method(request_message=MAKE_MOVE_REQUEST,
                       response_message=GameForm,
@@ -94,76 +114,149 @@ class HangmanApi(remote.Service):
     def make_move(self, request):
         """Makes a move. Returns a game state with message"""
         _game = get_by_urlsafe(request.urlsafe_game_key, Game)
+        # Check if game is not over, if so return information.
         if _game.game_over:
-            return _game.to_form('Game already over!')
-
+            return _game.to_form('Game already over!', None, None)
+        # Validates input.
+        # First check for empty field.
         if request.guess == '':
-            return _game.to_form('guess was empty!')
+            return _game.to_form('guess was empty!', None, None)
+        # Second check for not allowed letters.
         elif request.guess not in _allowedLetters:
-            return _game.to_form("%s is not allowed" %request.guess)
-        elif check_if_guessed_before(request.guess,_game.key) == 'NOK':
-            return _game.to_form("%s has been guessed before" %request.guess)
+            return _game.to_form("%s is not allowed" % request.guess, None, None)
+        # Third check if letter has been guessed before.
+        elif check_if_guessed_before(request.guess, _game.key) == 'NOK':
+            return _game.to_form("%s has been guessed before" % request.guess,
+                                 None, guessedletters(request))
+        # In case input is ok..
         else:
-            _matchresult = matchresult(_game.target, _game.key, request.guess)
-#Hier gehts weiter
+            # compute the result string after guess, e.g. ***h****
+            _matchresult = matchresult(_game.target, request)
+            # Querry for moves already made in this game to compute remaining
+            # moves and move number.
             _noMoves = Move.query(Move.game == _game.key)
-
+            # Initiate List of move Numbers and number of current move.
             _nextNoList = ""
             _nextNo = '0'
-
-            if _noMoves is None:
-                print('NONE BAZINGA')
-                _nextNo = '0'
+            # Check if this is the first move of a new game.
+            if _noMoves.get() is None:
+                _nextNo = 0
+            # If this is not the first move of a new game, compute move number.
             else:
 
                 for n in _noMoves:
-                    print('BAZINGA')
-                    _nextNoList += str(n.no)
+                    _nextNoList += str(n.move_no)
 
                 _nextNo = int(max(list(_nextNoList))) + 1
-                print('Yo NO!!!!!')
-                print(_nextNo)
-
-
-            
-
+        # Create new Bigtable move entity
         _move = Move(
-            game = _game.key,
-            no = _nextNo,
-            guess = request.guess,
-            matchresult = _matchresult
+            game=_game.key,
+            move_no=_nextNo,
+            guess=request.guess,
+            matchresult=_matchresult
         )
-        print('put da move yo!')
+        # write move to Bigtable
         _move.put()
 
         _moves = Move.query(Move.game == _game.key)
 
         _game.attempts_remaining -= 1
 
-
         if _matchresult == _game.target:
             _game.end_game(True)
-            return _game.to_form('You win!')
+            compute_ranking(_game.user)
+            return _game.to_form('You win!', _matchresult,
+                                 guessedletters(request))
 
         if request.guess in _game.target:
-            msg = 'you found a new letter.'
+            msg = 'You found a new letter.'
         else:
-            msg = 'guessed letter is not part of the secret word.'
+            msg = 'Guessed letter is not part of the secret word.'
 
         if _game.attempts_remaining < 1:
             _game.end_game(False)
-            return _game.to_form(msg + ' Game over!')
+            compute_ranking(_game.user)
+            return _game.to_form(msg + ' Game over!', _matchresult,
+                                 guessedletters(request))
         else:
             _game.put()
-            return _game.to_form(msg)
+            return _game.to_form(msg, _matchresult, guessedletters(request))
 
-    @endpoints.method(response_message=ScoreForms,
+    @endpoints.method(request_message=GET_HIGH_SCORE,
+                      response_message=ScoreForms,
                       path='scores',
-                      name='get_scores',
+                      name='get_high_scores',
                       http_method='GET')
+# HIGH SCORE
     def get_scores(self, request):
-        """Return all scores"""
-        return ScoreForms(items=[score.to_form() for score in Score.query()])
+        """Return a high score"""
+        # Returns a list of games odered by number of guesses (lower is better)
+        return ScoreForms(items=[score.to_form() for score \
+        in Score.query().order(Score.guesses).fetch(request.limit)])
+
+# GET USER GAMES
+    @endpoints.method(request_message=GET_USER_GAMES_REQUEST,
+                      response_message=GamesForm,
+                      path='usergames',
+                      name='get_user_games',
+                      http_method='GET')
+    def get_user_games(self, request):
+
+        _curuser = User.query(User.name == request.user_name)
+        _curuseres = _curuser.get()
+
+        if _curuseres is None:
+            a = GamesForm(message='User does not exist!')
+            return a
+
+        _games = Game.query(Game.user == _curuseres.key)
+
+        return GamesForm(items=[g.to_form(None, None, None) for g in _games])
+
+# CANCEL Game
+# cancel_game
+
+    @endpoints.method(request_message=CANCEL_GAME,
+                      response_message=CancelGameConfirmationForm,
+                      path='game/delete/{urlsafe_game_key}',
+                      name='cancel_game',
+                      http_method='POST')
+    def cancel_game(self, request):
+
+        # Get game from Bigtable
+        _game = get_by_urlsafe(request.urlsafe_game_key, Game)
+
+        # Check if game was found by url_safe_gamekey
+        if _game:
+            # If so execute query.
+            _gameover = _game.query().get()
+
+            # Check if game is over.
+            if _gameover and _gameover.game_over == True:
+                # get moves of that game.
+                _moves = Move.query(Move.game == _gameover.key).fetch()
+                # Make a list of related move entities to delete.
+                list_of_keys = ndb.put_multi(_moves)
+                list_of_entities = ndb.get_multi(list_of_keys)
+                # Delete the moves.
+                ndb.delete_multi(list_of_keys)
+                # Delete the game.
+                _gameover.key.delete()
+                # Return confirmation that game has been deleted
+                return _gameover.to_delete_confirmation_form('Game deleted!')
+
+            # In case game is not over go here.
+            elif _gameover and _gameover.game_over == False:
+                # Tell the user that a not ended game can not be deleted.
+                return _gameover.to_delete_confirmation_form(
+                    'Cant delete Game which is not over!')
+
+        # If game was not found raise an error.
+        else:
+            raise endpoints.NotFoundException('Game not found!')
+
+# GET_USER_SCORES
+# get_user_scores
 
     @endpoints.method(request_message=USER_REQUEST,
                       response_message=ScoreForms,
@@ -175,7 +268,7 @@ class HangmanApi(remote.Service):
         user = User.query(User.name == request.user_name).get()
         if not user:
             raise endpoints.NotFoundException(
-                    'A User with that name does not exist!')
+                'A User with that name does not exist!')
         scores = Score.query(Score.user == user.key)
         return ScoreForms(items=[score.to_form() for score in scores])
 
@@ -194,23 +287,39 @@ class HangmanApi(remote.Service):
         if games:
             count = len(games)
             total_attempts_remaining = sum([game.attempts_remaining
-                                        for game in games])
-            average = float(total_attempts_remaining)/count
+                                            for game in games])
+            average = float(total_attempts_remaining) / count
             memcache.set(MEMCACHE_MOVES_REMAINING,
                          'The average moves remaining is {:.2f}'.format(average))
-# Own Code Start
-    @endpoints.method(request_message=GET_MOVE_REQUEST,
-                      response_message=MoveForm,
-                      path='move/{urlsafe_game_key}',
-                      name='get_move',
+# GET USER RANKINGS
+
+    @endpoints.method(response_message=RankingsForm,
+                      path='ranking',
+                      name='get_user_rankings',
                       http_method='GET')
-    def get_move(self, request):
+    def get_user_rankings(self, request):
         """Return the current game state."""
-        move = get_by_urlsafe(request.urlsafe_game_key, Move)
-        if move:
-            return move.to_form('What a smart move!')
+        _rankings = Ranking.query().order(-Ranking.player_ranking).fetch()
+        if _rankings:
+            return RankingsForm(items=[rank.to_form() for rank in _rankings])
         else:
-            raise endpoints.NotFoundException('Move not found!')
-# Own Code End
+            raise endpoints.NotFoundException('Ranking not found')
+
+# get_game_history
+
+    @endpoints.method(request_message=GET_GAME_H,
+                      response_message=GameHistoryForm,
+                      path='gamehistory/{urlsafe_game_key}',
+                      name='get_game_history',
+                      http_method='GET')
+    def get_game_history(self, request):
+
+        _game = get_by_urlsafe(request.urlsafe_game_key, Game)
+
+        _moves = Move.query(Move.game == _game.key,
+                            ).order(Move.move_no).fetch()
+
+        return GameHistoryForm(items=[m.to_form_hist() for m in _moves])
+
 
 api = endpoints.api_server([HangmanApi])

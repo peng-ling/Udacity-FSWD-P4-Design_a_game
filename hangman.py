@@ -23,12 +23,12 @@ class game:
 
         for s in range(0,len(self.secret)):
             match +='*'
-        
+
         for letter in self.guessedLetters:
             for idx,secretletter in enumerate(self.secret):
                 if letter == secretletter:
                     match[idx] = letter
-                    
+
         return "".join(match)
 
 
@@ -44,14 +44,14 @@ class game:
                 isguessvalid = "%s is not allowed" %letter
         else:
             isguessvalid = "guessed letter is valid"
-            
+
         return isguessvalid
 
 
     def turnsleft(self):
 
         tl = self.maxnumberguesses - len(self.guessedLetters)
-        
+
         return tl
 
     def gamestate(self):
@@ -64,3 +64,5 @@ class game:
             gs = 'lost'
 
         return gs
+
+# Comment
