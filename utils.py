@@ -69,7 +69,7 @@ def matchresult(secret, request):
         for idx,secretletter in enumerate(secret):
             if letter == secretletter:
                 _matchlist[idx] = letter
-                    
+
     return "".join(_matchlist)
 
 def guessedletters(request):
@@ -104,7 +104,7 @@ def compute_ranking(user_key):
         _gamecount += 1
         #..compute and sum up the score of each game.
         _score += (ug.attempts_allowed - (ug.attempts_allowed - ug.attempts_remaining))
-    
+
     # Rank is the score divided by the number of games.
     _rank = _score / _gamecount
 
@@ -119,9 +119,7 @@ def compute_ranking(user_key):
         # .. otherwise generate a whole new Ranging entry.
     else:
         _user = User.query(User.key == user_key).get()
-        print('Kacke mit EI!')
         print(_user)
         print(type(_user))
         _ranking = Ranking(player_name = _user.name, player_ranking = _rank , user = user_key)
         _ranking.put()
-
