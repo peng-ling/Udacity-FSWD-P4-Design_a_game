@@ -38,40 +38,49 @@ def get_by_urlsafe(urlsafe, model):
 
     return entity
 
-
+# Checks if letter has been guessed befor.
 def check_if_guessed_before(guess, urlsafe):
 
     _moves = Move.query(Move.game == urlsafe).get()
 
+    # Check if this is the first move and Return ok (letter has not been
+    # guessed before)
     if not _moves:
         return "OK"
-
+    # Itterate over all guessed letters and...
     for g in _moves.guess:
-
+        # if has been guessed before return "NOK"
+        # (letter has been guesed before).
         if g == guess:
             return "NOK"
+        # Letter has not been guessed before.
         else:
             return "OK"
 
-
+# Returns string which shows letters which are in the secret, e.g. **k****
 def matchresult(secret, request):
 
     _match = ""
 
     _guessedLetters = ""
 
+    # as lenght of secret is variable prepare a *** string of correct lenght.
     for s in range(0,len(secret)):
         _match +='*'
         _matchlist = list(_match)
 
+    # Get all letters which have been guessed so far.
     _guessedLetters = guessedletters(request)
+    # Itterate over guessedletters and if one of the matches with secret..
     for letter in _guessedLetters:
+        # replace * by guessed letter.
         for idx,secretletter in enumerate(secret):
             if letter == secretletter:
                 _matchlist[idx] = letter
-
+    # Return matchresult as a string.
     return "".join(_matchlist)
 
+# Returns all guessed letters for a game.
 def guessedletters(request):
     _guessedLetters = ""
 
@@ -129,7 +138,5 @@ def compute_ranking(user_key):
         # .. otherwise generate a whole new Ranging entry.
     else:
         _user = User.query(User.key == user_key).get()
-        print(_user)
-        print(type(_user))
         _ranking = Ranking(player_name = _user.name, player_ranking = _rank , user = user_key)
         _ranking.put()
