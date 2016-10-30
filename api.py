@@ -158,7 +158,6 @@ class HangmanApi(remote.Service):
         # write move to Bigtable
         _move.put()
 
-        #_moves = Move.query(Move.game == _game.key)
 
         _game.attempts_remaining -= 1
 
