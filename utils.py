@@ -75,18 +75,28 @@ def matchresult(secret, request):
 def guessedletters(request):
     _guessedLetters = ""
 
+    # get current game.
     _game = get_by_urlsafe(request.urlsafe_game_key, Game)
 
-    _moves = Move.query(Move.game == _game.key)
+    # query moves of current game
+    _moves = Move.query(Move.game == _game.key).fetch()
 
+    # Check if a move has been made already.
     if _moves is not None:
+        # For every move get the guessed letter and concatenate them.
         for g in _moves:
             _guessedLetters += str(g.guess)
+        # As matchresult gets computed before the first move
+        # is put() add the guessed letter from request here.
         _guessedLetters += request.guess
+        # make guessed letters distinct, as otherwise guessed letters will
+        # duplicate.
+        _guessedLettersdist = ''.join(set(_guessedLetters))
+    # In case no move has been made for current game go here.
     else:
-        _guessedLetters += request.guess
-
-    return _guessedLetters
+        _guessedLettersdist += request.guess
+    # Return all so far guessed letters.
+    return _guessedLettersdist
 
 # Computes the actuall ranking of a given user und stores it in / updates Ranking
 def compute_ranking(user_key):
