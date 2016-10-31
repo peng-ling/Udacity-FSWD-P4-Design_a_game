@@ -32,7 +32,7 @@ https://support.google.com/chrome/answer/1342714?hl=en
 
 1. In terminal, make sure you are in the repository root folder.
 2. enter: appcfg.py -A "yourprojectid" -V v1 update ./
-3. After successfully deployment of the app, you can access it by opening 
+3. After successfully deployment of the app, you can access it by opening
 
 
 
@@ -40,6 +40,12 @@ https://support.google.com/chrome/answer/1342714?hl=en
 ## API endpoints description
 
 ### cancel_game
+
+- Purpose: Chancel a running game.
+- Argument: urlsafe_game_key
+- return value in case of success: 'Game deleted!'
+- return value in case game could not be deleted because it's still running: 'Cant delete Game which is not over!'
+- In case game was not found a exception is thrown, with message: 'Game not found!'
 
 ### create_user
 
