@@ -51,6 +51,7 @@ CANCEL_GAME = endpoints.ResourceContainer(
 
 MEMCACHE_MOVES_REMAINING = 'MOVES_REMAINING'
 
+# All letters which a valid for a guess.
 _allowedLetters = 'abcdefghijklmnopqrstuvwxyz'
 
 
@@ -64,11 +65,14 @@ class HangmanApi(remote.Service):
                       http_method='POST')
     def create_user(self, request):
         """Create a User. Requires a unique username"""
+        # Check if user already exists
         if User.query(User.name == request.user_name).get():
             raise endpoints.ConflictException(
                 'A User with that name already exists!')
+        # If user does not exists create him.
         user = User(name=request.user_name, email=request.email)
         user.put()
+        # Return that user has been succsessfully created.
         return StringMessage(message='User {} created!'.format(
             request.user_name))
 
@@ -79,17 +83,20 @@ class HangmanApi(remote.Service):
                       http_method='POST')
     def new_game(self, request):
         """Creates new game"""
+        # Get user who starts a new game.
         user = User.query(User.name == request.user_name).get()
+        # Check if user exists...
         if not user:
+            # Raise an error if user does not exist.
             raise endpoints.NotFoundException(
                 'A User with that name does not exist!')
-
+        # Create a new game by calling Game method new_game.
         game = Game.new_game(user.key)
-
         # Use a task queue to update the average attempts remaining.
         # This operation is not needed to complete the creation of a new game
         # so it is performed out of sequence.
         taskqueue.add(url='/tasks/cache_average_attempts')
+        # Return a gentle message whiching the user good lick.
         return game.to_form('Good luck playing Hangman!', None, None)
 
     @endpoints.method(request_message=GET_GAME_REQUEST,
@@ -100,13 +107,14 @@ class HangmanApi(remote.Service):
     def get_game(self, request):
         """Return the current game state."""
         _game = get_by_urlsafe(request.urlsafe_game_key, Game)
+        # If game is found return game state.
         if _game:
             return _game.to_form('Time to make a move!', None, None)
         else:
+            # If game is not found raise an error message.
             raise endpoints.NotFoundException('Game not found!')
 
 # MAKE_MOVE_REQUEST
-
     @endpoints.method(request_message=MAKE_MOVE_REQUEST,
                       response_message=GameForm,
                       path='game/{urlsafe_game_key}',
@@ -229,7 +237,7 @@ class HangmanApi(remote.Service):
                       name='cancel_game',
                       http_method='POST')
     def cancel_game(self, request):
-
+        """Cancel a game."""
         # Get game from Bigtable
         _game = get_by_urlsafe(request.urlsafe_game_key, Game)
 
@@ -298,33 +306,35 @@ class HangmanApi(remote.Service):
             memcache.set(MEMCACHE_MOVES_REMAINING,
                          'The average moves remaining is {:.2f}'.format(average))
 # GET USER RANKINGS
-
     @endpoints.method(response_message=RankingsForm,
                       path='ranking',
                       name='get_user_rankings',
                       http_method='GET')
     def get_user_rankings(self, request):
-        """Return the current game state."""
+        """Returns actuall high score."""
+        #Query for Rankings
         _rankings = Ranking.query().order(-Ranking.player_ranking).fetch()
+        # In case Rankings exist, return them.
         if _rankings:
             return RankingsForm(items=[rank.to_form() for rank in _rankings])
+            # If no rankings exist raise endpoint error.
         else:
             raise endpoints.NotFoundException('Ranking not found')
 
 # get_game_history
-
     @endpoints.method(request_message=GET_GAME_H,
                       response_message=GameHistoryForm,
                       path='gamehistory/{urlsafe_game_key}',
                       name='get_game_history',
                       http_method='GET')
     def get_game_history(self, request):
-
+        """Returns all moves of a game"""
+        #get game.
         _game = get_by_urlsafe(request.urlsafe_game_key, Game)
-
+        # get moves of the game.
         _moves = Move.query(Move.game == _game.key,
                             ).order(Move.move_no).fetch()
-
+        # Return ordered moves.
         return GameHistoryForm(items=[m.to_form_hist() for m in _moves])
 
 
