@@ -40,7 +40,7 @@ def get_by_urlsafe(urlsafe, model):
 
 # Checks if letter has been guessed befor.
 def check_if_guessed_before(guess, urlsafe):
-
+    # Get all moves of a game to get guessed letters.
     _moves = Move.query(Move.game == urlsafe).get()
 
     # Check if this is the first move and Return ok (letter has not been
@@ -61,12 +61,11 @@ def check_if_guessed_before(guess, urlsafe):
 def matchresult(secret, request):
 
     _match = ""
-
     _guessedLetters = ""
 
     # as lenght of secret is variable prepare a *** string of correct lenght.
-    for s in range(0,len(secret)):
-        _match +='*'
+    for s in range(0, len(secret)):
+        _match += '*'
         _matchlist = list(_match)
 
     # Get all letters which have been guessed so far.
@@ -74,7 +73,7 @@ def matchresult(secret, request):
     # Itterate over guessedletters and if one of the matches with secret..
     for letter in _guessedLetters:
         # replace * by guessed letter.
-        for idx,secretletter in enumerate(secret):
+        for idx, secretletter in enumerate(secret):
             if letter == secretletter:
                 _matchlist[idx] = letter
     # Return matchresult as a string.
@@ -107,7 +106,8 @@ def guessedletters(request):
     # Return all so far guessed letters.
     return _guessedLettersdist
 
-# Computes the actuall ranking of a given user und stores it in / updates Ranking
+# Computes the actuall ranking of a given user und stores it in / updates
+# Ranking
 def compute_ranking(user_key):
 
     _gamecount = 0
@@ -115,14 +115,16 @@ def compute_ranking(user_key):
     _rank = 0
 
     # Fetch all games of one user
-    _usergames = Game.query(Game.game_over == True, Game.user == user_key).fetch()
+    _usergames = Game.query(Game.game_over == True,
+                            Game.user == user_key).fetch()
 
     # Itterate over all games of one user and...
     for ug in _usergames:
         #..count the games he played.
         _gamecount += 1
         #..compute and sum up the score of each game.
-        _score += (ug.attempts_allowed - (ug.attempts_allowed - ug.attempts_remaining))
+        _score += (ug.attempts_allowed -
+                   (ug.attempts_allowed - ug.attempts_remaining))
 
     # Rank is the score divided by the number of games.
     _rank = _score / _gamecount
@@ -130,7 +132,7 @@ def compute_ranking(user_key):
     # Check if user has an entry in Ranking already and..
     _already_ranked = Ranking.query(Ranking.user == user_key).get()
 
-        #..if so update the new rank only.
+    #..if so update the new rank only.
     if _already_ranked:
         r = _already_ranked.key.get()
         r.player_ranking = _rank
@@ -138,5 +140,6 @@ def compute_ranking(user_key):
         # .. otherwise generate a whole new Ranging entry.
     else:
         _user = User.query(User.key == user_key).get()
-        _ranking = Ranking(player_name = _user.name, player_ranking = _rank , user = user_key)
+        _ranking = Ranking(player_name=_user.name,
+                           player_ranking=_rank, user=user_key)
         _ranking.put()
