@@ -9,25 +9,32 @@ from google.appengine.ext import ndb
 
 from wordlist import w
 
-
+# Entity which stores the users.
 class User(ndb.Model):
     """User profile"""
     name = ndb.StringProperty(required=True)
     email =ndb.StringProperty()
 
-
+# Entity which stores the games.
 class Game(ndb.Model):
     """Game object"""
+    #secret word which one needs to reveal.
     target = ndb.StringProperty(required=True)
+    #Number of attempts which one may make to guess the secret word.
     attempts_allowed = ndb.IntegerProperty(required=True)
+    # Number of attempts to guess the secret word.
     attempts_remaining = ndb.IntegerProperty(required=True)
+    # State of game (running / over).
     game_over = ndb.BooleanProperty(required=True, default=False)
+    # Key to user who initiated the game.
     user = ndb.KeyProperty(required=True, kind='User')
 
     @classmethod
     def new_game(cls, user):
         """Creates and returns a new game"""
+        # Retrieve the secret word randomly from list.
         _secretWord = random.choice(w)
+        # Compute the number of attemps one have to guess the word.
         _attempts = len(_secretWord) +5
 
         game = Game(user=user,
@@ -51,6 +58,8 @@ class Game(ndb.Model):
         return form
 
     def to_delete_confirmation_form(self, message):
+        """Returns confirmation in case a game has been succsessfully been
+        deleted"""
         form = CancelGameConfirmationForm()
         form.urlsafe_key = self.key.urlsafe()
         form.message = message
@@ -65,10 +74,8 @@ class Game(ndb.Model):
         # Add the game to the score 'board'
         score = Score(user=self.user, date=date.today(), won=won,
                       guesses=self.attempts_allowed - self.attempts_remaining)
-        # Wrize Score.
+        # Write Score.
         score.put()
-
-
 
 class Score(ndb.Model):
     """Score object"""
@@ -81,7 +88,6 @@ class Score(ndb.Model):
         return ScoreForm(user_name=self.user.get().name, won=self.won,
                          date=str(self.date), guesses=self.guesses)
 
-
 class GameForm(messages.Message):
     """GameForm for outbound game state information"""
     urlsafe_key = messages.StringField(1, required=True)
@@ -92,34 +98,27 @@ class GameForm(messages.Message):
     matchresult = messages.StringField(6)
     guessedletters = messages.StringField(7)
 
-
 class GamesForm(messages.Message):
+    """Returns a list of all games"""
     items = messages.MessageField(GameForm,1, repeated=True)
     message = messages.StringField(2)
-
-
-
-
 
 class NewGameForm(messages.Message):
     """Used to create a new game"""
     user_name = messages.StringField(1, required=True)
+    
 # CANCEL Game
 # cancel_game
 class CancelGameForm(messages.Message):
     urlsafe_key = messages.StringField(1, required=True)
 
-
 class CancelGameConfirmationForm(messages.Message):
     urlsafe_key = messages.StringField(1, required=True)
     message = messages.StringField(2)
 
-
-
 class MakeMoveForm(messages.Message):
     """Used to make a move in an existing game"""
     guess = messages.StringField(1, required=True)
-
 
 class ScoreForm(messages.Message):
     """ScoreForm for outbound Score information"""
@@ -127,7 +126,6 @@ class ScoreForm(messages.Message):
     date = messages.StringField(2, required=True)
     won = messages.BooleanField(3, required=True)
     guesses = messages.IntegerField(4, required=True)
-
 
 class ScoreForms(messages.Message):
     """Return multiple ScoreForms"""
@@ -159,14 +157,10 @@ class Move(ndb.Model):
 
 class MoveFormHist(messages.Message):
 
-    print(messages.IntegerField(2))
-
     move_no = messages.IntegerField(2)
     guess = messages.StringField(3)
     matchresult = messages.StringField(4)
     movesleft = messages.IntegerField(5)
-
-
 
 class MoveForm(messages.Message):
     #urlsafe_key = messages.StringField(1, required=True)
@@ -175,24 +169,16 @@ class MoveForm(messages.Message):
     matchresult = messages.StringField(4)
     movesleft = messages.IntegerField(5)
 
-
-
 class GameHistoryForm(messages.Message):
     items = messages.MessageField(MoveFormHist,1, repeated=True)
-
-
-
 
 class StringMessage(messages.Message):
     """StringMessage-- outbound (single) string message"""
     message = messages.StringField(1, required=True)
 
-
-#Ranking
-
-
+# Stores high scores
 class Ranking(ndb.Model):
-    """User profile"""
+    """User Ranking"""
     player_name = ndb.StringProperty(required=True)
     player_ranking = ndb.IntegerProperty(required=True)
     user = ndb.KeyProperty(required=True, kind='User')
