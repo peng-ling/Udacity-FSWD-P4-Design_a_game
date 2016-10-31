@@ -104,6 +104,7 @@ class HangmanApi(remote.Service):
             return _game.to_form('Time to make a move!', None, None)
         else:
             raise endpoints.NotFoundException('Game not found!')
+
 # MAKE_MOVE_REQUEST
 
     @endpoints.method(request_message=MAKE_MOVE_REQUEST,
@@ -158,62 +159,69 @@ class HangmanApi(remote.Service):
         # write move to Bigtable
         _move.put()
 
-
+        # After move got put(), decrease attempts_remaining by one.
         _game.attempts_remaining -= 1
-
+        # Check if game is won after this move.
         if _matchresult == _game.target:
+            # Set game to be finished.
             _game.end_game(True)
+            # After a ame is over compute and write new ranking of playring user.
             compute_ranking(_game.user)
+            # Retun good news oto user.
             return _game.to_form('You win!', _matchresult,
                                  guessedletters(request))
-
+        # In case game s not won, check if guess hits a letter in secret.
         if request.guess in _game.target:
             msg = 'You found a new letter.'
         else:
             msg = 'Guessed letter is not part of the secret word.'
-
+        # Check if there are moves left, otherwise end the game and set won to
+        # false.
         if _game.attempts_remaining < 1:
             _game.end_game(False)
+            # Game is over, so compute ranking.
             compute_ranking(_game.user)
+            # Tell the user the game is over.
             return _game.to_form(msg + ' Game over!', _matchresult,
                                  guessedletters(request))
+        # In case there are moves left, update game.
         else:
             _game.put()
+            # Tell user new matchresult and the letters guessed so far.
             return _game.to_form(msg, _matchresult, guessedletters(request))
 
+# GET_HIGH_SCORE
     @endpoints.method(request_message=GET_HIGH_SCORE,
                       response_message=ScoreForms,
                       path='scores',
                       name='get_high_scores',
                       http_method='GET')
-# HIGH SCORE
     def get_scores(self, request):
         """Return a high score"""
         # Returns a list of games odered by number of guesses (lower is better)
         return ScoreForms(items=[score.to_form() for score \
         in Score.query().order(Score.guesses).fetch(request.limit)])
 
-# GET USER GAMES
+# GET_USER_GAMES_REQUEST
     @endpoints.method(request_message=GET_USER_GAMES_REQUEST,
                       response_message=GamesForm,
                       path='usergames',
                       name='get_user_games',
                       http_method='GET')
     def get_user_games(self, request):
-
+        # Query for user by user_name.
         _curuser = User.query(User.name == request.user_name)
         _curuseres = _curuser.get()
-
+        # Check if user exists.
         if _curuseres is None:
             a = GamesForm(message='User does not exist!')
             return a
-
+        # In case user has been found, get all his games.
         _games = Game.query(Game.user == _curuseres.key)
-
+        # Return useres games.
         return GamesForm(items=[g.to_form(None, None, None) for g in _games])
 
-# CANCEL Game
-# cancel_game
+# CANCEL_GAME
 
     @endpoints.method(request_message=CANCEL_GAME,
                       response_message=CancelGameConfirmationForm,
@@ -254,8 +262,7 @@ class HangmanApi(remote.Service):
         else:
             raise endpoints.NotFoundException('Game not found!')
 
-# GET_USER_SCORES
-# get_user_scores
+# USER_REQUEST
 
     @endpoints.method(request_message=USER_REQUEST,
                       response_message=ScoreForms,

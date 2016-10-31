@@ -49,18 +49,14 @@ class Game(ndb.Model):
         form.matchresult = matchresult
         form.guessedletters = guessedletters
         return form
-    
+
     def to_delete_confirmation_form(self, message):
         form = CancelGameConfirmationForm()
         form.urlsafe_key = self.key.urlsafe()
         form.message = message
         return form
 
-
-
-
-
-
+    # Sets if game is won or lost after it is finished and writes score.
     def end_game(self, won=False):
         """Ends the game - if won is True, the player won. - if won is False,
         the player lost."""
@@ -69,6 +65,7 @@ class Game(ndb.Model):
         # Add the game to the score 'board'
         score = Score(user=self.user, date=date.today(), won=won,
                       guesses=self.attempts_allowed - self.attempts_remaining)
+        # Wrize Score.
         score.put()
 
 
@@ -145,14 +142,14 @@ class Move(ndb.Model):
     def to_form(self, message):
         form = MoveForm()
 
-        form.urlsafe_key = self.key.urlsafe(), 
+        form.urlsafe_key = self.key.urlsafe(),
         form.move_no=self.move_no,
-        form.guess=self.guess, 
+        form.guess=self.guess,
         form.matchresult=self.matchresult,
         form.movesleft = self.movesleft
 
         return form
-    
+
     def to_form_hist(self):
         form = MoveFormHist()
         form.move_no = self.move_no
@@ -161,9 +158,9 @@ class Move(ndb.Model):
         return form
 
 class MoveFormHist(messages.Message):
- 
+
     print(messages.IntegerField(2))
-    
+
     move_no = messages.IntegerField(2)
     guess = messages.StringField(3)
     matchresult = messages.StringField(4)
@@ -178,7 +175,7 @@ class MoveForm(messages.Message):
     matchresult = messages.StringField(4)
     movesleft = messages.IntegerField(5)
 
-  
+
 
 class GameHistoryForm(messages.Message):
     items = messages.MessageField(MoveFormHist,1, repeated=True)
