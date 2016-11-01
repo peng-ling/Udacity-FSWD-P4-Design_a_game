@@ -41,18 +41,21 @@ https://support.google.com/chrome/answer/1342714?hl=en
 
 ### cancel_game
 
+- endpoint path: _ah/api/hangman/_ah/api/hangman/v1/game/delete/{urlsafe_game_key}
 - Purpose: Chancel a running game.
 - HTTP method: POST
-- Argument: urlsafe_game_key
+- Argument: urlsafe_game_key [mandatory]
 - return value in case of success: 'Game deleted!'
 - return value in case game could not be deleted because it's still running: 'Cant delete Game which is not over!'
 - In case game was not found an exception is thrown, with message: 'Game not found!'
 
 ### create_user
 
+- endpoint path: _ah/api/hangman/_ah/api/hangman/v1/user?email={email}&user_name={user_name}
+
 - Purpose: Create a new user
 - HTTP method: POST
-- Arguments: user_name, email
+- Arguments: user_name [mandatory], email [optional]
 - return value in case of success: 'User [user_name] has been success created'.
 - In case user already exists an exception is thrown, with message: 'A User with that name already exists!'
 
@@ -60,14 +63,36 @@ https://support.google.com/chrome/answer/1342714?hl=en
 
 - endpoint path: _ah/api/hangman/v1/games/average_attempts
 - Purpose: Returns the average remain attempts over all games.
-- HTTP method: get
+- HTTP method: GET
 - Arguments: None
-- return value in case of success: number of avverage attempts
-
+- return value in case of success: number of average attempts
 
 ### get_game
 
-### get_game_hostory
+- endpoint path: _ah/api/hangman/v1/game/{urlsafe_game_key}
+- Purpose: Returns information on selected game.
+- HTTP method: GET
+- Arguments: urlsafe_game_key [mandatory]
+- returned attributes in case of success:
+  - message
+  - urlsafe_key
+  - attempts_remaining
+  - game_over
+- In case game does not exists an exception is thrown, with message: 'Game not found!'
+
+### get_game_history
+
+- endpoint path: _ah/api/hangman/v1/gamehistory/{urlsafe_game_key}
+- Purpose: Returns every move of a specific game
+- HTTP method: GET
+- Arguments: urlsafe_game_key [mandatory]
+- returned attributes in case of success:
+  - on item per move with attributes
+    - move_no
+    - guess
+    - matchresult
+- In case game does not exists an exception is thrown, with message: 'Game not found!'
+
 
 ### get_high_scores
 

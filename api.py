@@ -329,11 +329,13 @@ class HangmanApi(remote.Service):
         """Returns all moves of a game"""
         #get game.
         _game = get_by_urlsafe(request.urlsafe_game_key, Game)
-        # get moves of the game.
-        _moves = Move.query(Move.game == _game.key,
+        if _game:
+            # get moves of the game.
+            _moves = Move.query(Move.game == _game.key,
                             ).order(Move.move_no).fetch()
-        # Return ordered moves.
-        return GameHistoryForm(items=[m.to_form_hist() for m in _moves])
-
+            # Return ordered moves.
+            return GameHistoryForm(items=[m.to_form_hist() for m in _moves])
+        else:
+            raise endpoints.NotFoundException('Game not found')    
 
 api = endpoints.api_server([HangmanApi])
