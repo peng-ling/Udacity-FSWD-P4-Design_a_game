@@ -54,9 +54,16 @@ https://support.google.com/chrome/answer/1342714?hl=en
 - HTTP method: POST
 - Arguments: user_name, email
 - return value in case of success: 'User [user_name] has been success created'.
-- In case user already exists an exception is thron, with message: 'A User with that name already exists!'
+- In case user already exists an exception is thrown, with message: 'A User with that name already exists!'
 
 ### get_average_attempts_remaining
+
+- endpoint path: '_ah/api/hangman/v1/games/average_attempts'
+- Purpose: Returns the average remain attempts over all games.
+- HTTP method: get
+- Arguments: None
+- return value in case of success: number of avverage attempts
+
 
 ### get_game
 
