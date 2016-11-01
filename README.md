@@ -58,7 +58,7 @@ https://support.google.com/chrome/answer/1342714?hl=en
 
 ### get_average_attempts_remaining
 
-- endpoint path: '_ah/api/hangman/v1/games/average_attempts'
+- endpoint path: _ah/api/hangman/v1/games/average_attempts
 - Purpose: Returns the average remain attempts over all games.
 - HTTP method: get
 - Arguments: None
