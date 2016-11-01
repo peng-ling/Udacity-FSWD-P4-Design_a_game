@@ -42,12 +42,19 @@ https://support.google.com/chrome/answer/1342714?hl=en
 ### cancel_game
 
 - Purpose: Chancel a running game.
+- HTTP method: POST
 - Argument: urlsafe_game_key
 - return value in case of success: 'Game deleted!'
 - return value in case game could not be deleted because it's still running: 'Cant delete Game which is not over!'
-- In case game was not found a exception is thrown, with message: 'Game not found!'
+- In case game was not found an exception is thrown, with message: 'Game not found!'
 
 ### create_user
+
+- Purpose: Create a new user
+- HTTP method: POST
+- Arguments: user_name, email
+- return value in case of success: 'User [user_name] has been success created'.
+- In case user already exists an exception is thron, with message: 'A User with that name already exists!'
 
 ### get_average_attempts_remaining
 

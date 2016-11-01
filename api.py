@@ -175,7 +175,7 @@ class HangmanApi(remote.Service):
             _game.end_game(True)
             # After a ame is over compute and write new ranking of playring user.
             compute_ranking(_game.user)
-            # Retun good news oto user.
+            # Retun good news to user.
             return _game.to_form('You win!', _matchresult,
                                  guessedletters(request))
         # In case game s not won, check if guess hits a letter in secret.
@@ -230,7 +230,6 @@ class HangmanApi(remote.Service):
         return GamesForm(items=[g.to_form(None, None, None) for g in _games])
 
 # CANCEL_GAME
-
     @endpoints.method(request_message=CANCEL_GAME,
                       response_message=CancelGameConfirmationForm,
                       path='game/delete/{urlsafe_game_key}',
@@ -271,7 +270,6 @@ class HangmanApi(remote.Service):
             raise endpoints.NotFoundException('Game not found!')
 
 # USER_REQUEST
-
     @endpoints.method(request_message=USER_REQUEST,
                       response_message=ScoreForms,
                       path='scores/user/{user_name}',

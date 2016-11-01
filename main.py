@@ -23,14 +23,9 @@ class SendReminderEmail(webapp2.RequestHandler):
 
         for _g in _games:
             _user_with_unfinished_games.append(_g.user)
-        print('JJJJJJJJJJJJJJJJJJJJJJJ')
-        print(_user_with_unfinished_games)
-       
 
         for _user in _users:
             if _user.key in _user_with_unfinished_games:
-                print('Mail gesendet JJJJJJJJJJJJJJJJJJJJJJJ')
-                print(_user.name)
                 _subject = 'This is a reminder!'
                 _body = 'Hello {}, you have an unfinished hangman game! Go ahead and be a winner!'.format(_user.name)
                 # This will send test emails, the arguments to send_mail are:
