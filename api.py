@@ -119,7 +119,7 @@ class HangmanApi(remote.Service):
                       response_message=GameForm,
                       path='game/{urlsafe_game_key}',
                       name='make_move',
-                      http_method='PUT')
+                      http_method='POST')
     def make_move(self, request):
         """Makes a move. Returns a game state with message"""
         _game = get_by_urlsafe(request.urlsafe_game_key, Game)
@@ -217,6 +217,7 @@ class HangmanApi(remote.Service):
                       name='get_user_games',
                       http_method='GET')
     def get_user_games(self, request):
+        """Return all games of a user"""
         # Query for user by user_name.
         _curuser = User.query(User.name == request.user_name)
         _curuseres = _curuser.get()
@@ -336,6 +337,6 @@ class HangmanApi(remote.Service):
             # Return ordered moves.
             return GameHistoryForm(items=[m.to_form_hist() for m in _moves])
         else:
-            raise endpoints.NotFoundException('Game not found')    
+            raise endpoints.NotFoundException('Game not found')
 
 api = endpoints.api_server([HangmanApi])
