@@ -42,7 +42,7 @@ https://support.google.com/chrome/answer/1342714?hl=en
 ### cancel_game
 
 - endpoint path: _ah/api/hangman/_ah/api/hangman/v1/game/delete/{urlsafe_game_key}
-- Purpose: Chancel a running game.
+- Purpose: Chancel a running game
 - HTTP method: POST
 - Argument: urlsafe_game_key [mandatory]
 - return value in case of success: 'Game deleted!'
@@ -52,7 +52,6 @@ https://support.google.com/chrome/answer/1342714?hl=en
 ### create_user
 
 - endpoint path: _ah/api/hangman/_ah/api/hangman/v1/user?email={email}&user_name={user_name}
-
 - Purpose: Create a new user
 - HTTP method: POST
 - Arguments: user_name [mandatory], email [optional]
@@ -70,7 +69,7 @@ https://support.google.com/chrome/answer/1342714?hl=en
 ### get_game
 
 - endpoint path: _ah/api/hangman/v1/game/{urlsafe_game_key}
-- Purpose: Returns information on selected game.
+- Purpose: Returns information on selected game
 - HTTP method: GET
 - Arguments: urlsafe_game_key [mandatory]
 - returned attributes in case of success:
@@ -96,13 +95,59 @@ https://support.google.com/chrome/answer/1342714?hl=en
 
 ### get_high_scores
 
+- endpoint path: _ah/api/hangman/v1/scores?limit={limit}
+- Purpose: Returns the score and some additional information for each game
+- HTTP method: GET
+- Arguments: limit [optional] , limit how much scores will be returned
+- attributes
+ - date
+ - guesses
+ - won
+ - user_name
+
 ### get_user_games
 
+- endpoint path: _ah/api/hangman/v1/usergames?user_name={user_name}
+- Purpose: Returns all games of a specific user
+- Arguments: user_name [mandatory]
+- HTTP method: GET
+- returned attributes in case of success:
+  - on item per game with attributes
+    - urlsafe_key
+    - user_name
+    - attempts_remaining
+    - game_over
+- returns message 'User does not exist!' in case user is not found
+
+
 ### get_user_rankings
+- endpoint path: _ah/api/hangman/v1/ranking
+- Purpose: Returns all users with their rankings, ordered by ranking (highest first)
+- Arguments: None
+- HTTP method: GET
+- returned attributes in case of success:
+  - on item per game with attributes
+    - player_name
+    - player_ranking
+- In case game does not exists an exception is thrown, with message: 'Ranking not found'
+
 
 ### get_user_scores
+- endpoint path: _ah/api/hangman/v1/scores/user/{user_name}
+- Purpose: Returns scores of all games for a specific user
+- Arguments: user_name [mandatory]
+- returned attributes in case of success:
+  - on item per game with attributes
+    - date
+    - guesses
+    - won
+    - user_name
+  - In case user does not exists an exception is thrown, with message: 'A User with that name does not exist!'
+
 
 ### make_move
+- endpoint path: _ah/api/hangman/v1/game/{urlsafe_game_key}
+
 
 ### new_game
 
