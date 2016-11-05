@@ -86,7 +86,7 @@ class Score(ndb.Model):
 
     def to_form(self):
         return ScoreForm(user_name=self.user.get().name, won=self.won,
-                         date=str(self.date), guesses=self.guesses)
+                         date=str(self.date), guesses_left=self.guesses)
 
 class GameForm(messages.Message):
     """GameForm for outbound game state information"""
@@ -106,7 +106,7 @@ class GamesForm(messages.Message):
 class NewGameForm(messages.Message):
     """Used to create a new game"""
     user_name = messages.StringField(1, required=True)
-    
+
 # CANCEL Game
 # cancel_game
 class CancelGameForm(messages.Message):
@@ -125,7 +125,7 @@ class ScoreForm(messages.Message):
     user_name = messages.StringField(1, required=True)
     date = messages.StringField(2, required=True)
     won = messages.BooleanField(3, required=True)
-    guesses = messages.IntegerField(4, required=True)
+    guesses_left = messages.IntegerField(4, required=True)
 
 class ScoreForms(messages.Message):
     """Return multiple ScoreForms"""

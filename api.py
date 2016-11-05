@@ -174,6 +174,7 @@ class HangmanApi(remote.Service):
             # Set game to be finished.
             _game.end_game(True)
             # After a ame is over compute and write new ranking of playring user.
+            _game.put()
             compute_ranking(_game.user)
             # Retun good news to user.
             return _game.to_form('You win!', _matchresult,
