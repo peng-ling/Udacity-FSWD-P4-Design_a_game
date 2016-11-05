@@ -146,10 +146,44 @@ https://support.google.com/chrome/answer/1342714?hl=en
 
 
 ### make_move
-- endpoint path: _ah/api/hangman/v1/game/{urlsafe_game_key}
+- endpoint path: _ah/api/hangman/v1/game/{urlsafe_game_key} -{
+ "guess": "*"
+}
+- Purpose: Posts a move with a letter guessed by the user.
+- Arguments: urlsafe_game_key [mandatory] and guessed letter [mandatory]
+- returned attributes in case of success:
+  - attempts_remaining
+  - game_over
+  - guessedletters
+  - matchresult
+  - message"
+- In case guess is a not allowed letter or sign message contains related information
+- In case guess is empty message contains related information
+- In case user tries to make a move for an already ended game message contains related information
 
 
 ### new_game
 
+- endpoint path: _ah/api/hangman/v1/game
+{
+ "user_name": "*"
+}
+- Purpose: Initiates a new game
+- Arguments: user_name [mandatory]
+- returned attributes in case of success:
+  - attempts_remaining
+  - game_over
+  - message
+  - urlsafe_key
+  - user_name
+- In case user does not exists an exception is thrown, with message: 'A User with that name does not exist!'
+
 
 ## Explanation of score keeping
+
+The score for each game is the number of remaining guesses after the game is won.
+As the secret word can be of any length the maximum number of guesses is computed as the length of the secret
+word plus 5.
+
+High score is computed by dividing the the score for each game divided by the number of played games.
+Not matter if won or lost.
