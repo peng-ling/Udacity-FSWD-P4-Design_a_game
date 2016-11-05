@@ -1,0 +1,37 @@
+I choose hangman as the game to program, as I intended to get a general understanding
+of the google app engine and not to spend to much time with general programming duties.
+
+Before I started adapting the skeleton code I programmed a python class having all
+methods and properties a hangman game needs to have. This turned out to be a good idea,
+as it helped a lot to understand how hangman code can work in general.
+
+I did not need to modify the given datastore entities very much but to keep track of
+the moves of each game I introduced the entity Move with the following attributes:
+
+game: References the game the move belongs to
+move_no: Number of the move, this on is necessary for the get_game_history endpoint
+guess: the letter guessed in this move
+matchresult: the hangman typical result, e.g. *****a*** of the move
+
+Later on I came to the point to decide to either compute the player rankings on the fly
+each time the endpoint get_user_rankings is called or to compute / update and store them in a
+datastore entity each time a game is finished. It turned out to be easier to implement
+the second solution. I took resource usage into consideration but could not decide
+which solution might be the better choice regarding that.
+
+The Rank entity attributes are:
+
+player_name
+player_ranking
+and user which is the reference to the user Entity.
+
+This project was the hardest to get through of all udacity projects I did so far.
+Reasons for that were that the google developer console changed and the courses were
+referring to the old one and that the courses in general did not provided so much
+step by step examples as other ones did. The lesson i learned is to red through the
+sdk documentation and examples more thoroughly in future.
+
+The writing of the documentation of this project was something I did not like so
+much but it turned out, that while I wrote it I discovered a couple of bugs, so
+lessons learned from that is, that documenting code and writing documentation in
+general can increase software quality.
