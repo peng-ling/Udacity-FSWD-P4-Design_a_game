@@ -130,9 +130,13 @@ def compute_ranking(user_key):
         #..compute and sum up the score of each game.
         _score += (ug.attempts_allowed -
                    (ug.attempts_allowed - ug.attempts_remaining))
-
-    # Rank is the score divided by the number of games.
-    _rank = _score / _gamecount
+    # Check if gamecount is zero to avoind div by zero error, this happens when
+    # a user has no finished games.
+    if _gamecount == 0:
+        _rank = 0
+    else:
+        # Rank is the score divided by the number of games.
+        _rank = _score / _gamecount
 
     # Check if user has an entry in Ranking already and..
     _already_ranked = Ranking.query(Ranking.user == user_key).get()
