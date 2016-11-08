@@ -40,24 +40,27 @@ def get_by_urlsafe(urlsafe, model):
 # Checks if letter has been guessed befor.
 def check_if_guessed_before(guess, urlsafe):
     # Get all moves of a game to get guessed letters.
-    moves = Move.query(Move.game == urlsafe).get()
+    moves = Move.query(Move.game == urlsafe).fetch()
 
     # Check if this is the first move and Return ok (letter has not been
     # guessed before)
     if not moves:
         return "OK"
     # Itterate over all guessed letters and...
-    for g in moves.guess:
+    print('---------------------------------')
+    print (moves)
+    print('---------------------------------')
+    for g in moves:
         # if has been guessed before return "NOK"
         # (letter has been guesed before).
         print('*********************')
-        print(g)
         print(guess)
-        if g == guess:
+        print(g.guess)
+        if g.guess == guess:
             return "NOK"
         # Letter has not been guessed before.
-        else:
-            return "OK"
+
+    return "OK"
 
 # Returns string which shows letters which are in the secret, e.g. **k****
 def matchresult(secret, request):
