@@ -35,7 +35,7 @@ class Game(ndb.Model):
         # Retrieve the secret word randomly from list.
         _secretWord = random.choice(w)
         # Compute the number of attemps one have to guess the word.
-        _attempts = len(_secretWord) +5
+        _attempts = len(_secretWord)
 
         game = Game(user=user,
                     target=_secretWord,

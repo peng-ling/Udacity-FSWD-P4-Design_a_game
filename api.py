@@ -165,8 +165,6 @@ class HangmanApi(remote.Service):
         # write move to Bigtable
         _move.put()
 
-        # After move got put(), decrease attempts_remaining by one.
-        _game.attempts_remaining -= 1
         # Check if game is won after this move.
         if _matchresult == _game.target:
             # Set game to be finished.
@@ -182,6 +180,7 @@ class HangmanApi(remote.Service):
             msg = 'You found a new letter.'
         else:
             msg = 'Guessed letter is not part of the secret word.'
+            _game.attempts_remaining -= 1
         # Check if there are moves left, otherwise end the game and set won to
         # false.
         if _game.attempts_remaining < 1:
