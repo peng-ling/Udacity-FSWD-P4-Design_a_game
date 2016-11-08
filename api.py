@@ -4,8 +4,6 @@ This can also contain game logic. For more complex games it would be wise to
 move game logic to another file. Ideally the API will be simple, concerned
 primarily with communication to/from the API's users."""
 
-
-import logging
 import endpoints
 from protorpc import remote, messages
 from google.appengine.api import memcache
@@ -16,7 +14,7 @@ from models import User, Game, Score, Move, Ranking
 
 from models import StringMessage, NewGameForm, GameForm, MakeMoveForm,\
     ScoreForms, MoveForm, GamesForm, CancelGameConfirmationForm,\
-    RankingsForm, RankingForm, GameHistoryForm
+    RankingsForm, GameHistoryForm
 from utils import get_by_urlsafe, check_if_guessed_before, matchresult,\
     guessedletters, compute_ranking
 
@@ -52,7 +50,7 @@ CANCEL_GAME = endpoints.ResourceContainer(
 MEMCACHE_MOVES_REMAINING = 'MOVES_REMAINING'
 
 # All letters which a valid for a guess.
-_allowedLetters = 'abcdefghijklmnopqrstuvwxyz'
+ALLOWEDLETTERS = 'abcdefghijklmnopqrstuvwxyz'
 
 
 @endpoints.api(name='hangman', version='v1')
@@ -131,7 +129,7 @@ class HangmanApi(remote.Service):
         if request.guess == '':
             return _game.to_form('guess was empty!', None, None)
         # Second check for not allowed letters.
-        elif request.guess not in _allowedLetters:
+        elif request.guess not in ALLOWEDLETTERS:
             return _game.to_form("%s is not allowed" % request.guess, None, None)
         # Third check if letter has been guessed before.
         elif check_if_guessed_before(request.guess, _game.key) == 'NOK':
@@ -143,24 +141,24 @@ class HangmanApi(remote.Service):
             _matchresult = matchresult(_game.target, request)
             # Querry for moves already made in this game to compute remaining
             # moves and move number.
-            _noMoves = Move.query(Move.game == _game.key)
+            no_moves = Move.query(Move.game == _game.key)
             # Initiate List of move Numbers and number of current move.
-            _nextNoList = ""
-            _nextNo = '0'
+            nextNoList = ""
+            next_no = '0'
             # Check if this is the first move of a new game.
-            if _noMoves.get() is None:
-                _nextNo = 0
+            if no_moves.get() is None:
+                next_no = 0
             # If this is not the first move of a new game, compute move number.
             else:
 
-                for n in _noMoves:
-                    _nextNoList += str(n.move_no)
+                for n in no_moves:
+                    nextNoList += str(n.move_no)
 
-                _nextNo = int(max(list(_nextNoList))) + 1
+                next_no = int(max(list(nextNoList))) + 1
         # Create new Bigtable move entity
         _move = Move(
             game=_game.key,
-            move_no=_nextNo,
+            move_no= next_no,
             guess=request.guess,
             matchresult=_matchresult
         )
@@ -220,14 +218,14 @@ class HangmanApi(remote.Service):
     def get_user_games(self, request):
         """Return all games of a user"""
         # Query for user by user_name.
-        _curuser = User.query(User.name == request.user_name)
-        _curuseres = _curuser.get()
+        cur_user = User.query(User.name == request.user_name)
+        cur_useres = cur_user.get()
         # Check if user exists.
-        if _curuseres is None:
+        if cur_useres is None:
             a = GamesForm(message='User does not exist!')
             return a
         # In case user has been found, get all his games.
-        _games = Game.query(Game.user == _curuseres.key)
+        _games = Game.query(Game.user == cur_useres.key)
         # Return useres games.
         return GamesForm(items=[g.to_form(None, None, None) for g in _games])
 
@@ -240,31 +238,30 @@ class HangmanApi(remote.Service):
     def cancel_game(self, request):
         """Cancel a game."""
         # Get game from Bigtable
-        _game = get_by_urlsafe(request.urlsafe_game_key, Game)
+        game = get_by_urlsafe(request.urlsafe_game_key, Game)
 
         # Check if game was found by url_safe_gamekey
-        if _game:
+        if game:
             # If so execute query.
-            _gameover = _game.query().get()
+            gameover = game.query().get()
 
             # Check if game is over.
-            if _gameover and _gameover.game_over == True:
+            if gameover and gameover.game_over == True:
                 # get moves of that game.
-                _moves = Move.query(Move.game == _gameover.key).fetch()
+                moves = Move.query(Move.game == gameover.key).fetch()
                 # Make a list of related move entities to delete.
-                list_of_keys = ndb.put_multi(_moves)
-                list_of_entities = ndb.get_multi(list_of_keys)
+                list_of_keys = ndb.put_multi(moves)
                 # Delete the moves.
                 ndb.delete_multi(list_of_keys)
                 # Delete the game.
-                _gameover.key.delete()
+                gameover.key.delete()
                 # Return confirmation that game has been deleted
-                return _gameover.to_delete_confirmation_form('Game deleted!')
+                return gameover.to_delete_confirmation_form('Game deleted!')
 
             # In case game is not over go here.
-            elif _gameover and _gameover.game_over == False:
+            elif gameover and gameover.game_over == False:
                 # Tell the user that a not ended game can not be deleted.
-                return _gameover.to_delete_confirmation_form(
+                return gameover.to_delete_confirmation_form(
                     'Cant delete Game which is not over!')
 
         # If game was not found raise an error.
@@ -290,7 +287,7 @@ class HangmanApi(remote.Service):
                       path='games/average_attempts',
                       name='get_average_attempts_remaining',
                       http_method='GET')
-    def get_average_attempts(self, request):
+    def get_average_attempts(self):
         """Get the cached average moves remaining"""
         return StringMessage(message=memcache.get(MEMCACHE_MOVES_REMAINING) or '')
 
@@ -313,10 +310,10 @@ class HangmanApi(remote.Service):
     def get_user_rankings(self, request):
         """Returns actuall high score."""
         #Query for Rankings
-        _rankings = Ranking.query().order(-Ranking.player_ranking).fetch()
+        rankings = Ranking.query().order(-Ranking.player_ranking).fetch()
         # In case Rankings exist, return them.
-        if _rankings:
-            return RankingsForm(items=[rank.to_form() for rank in _rankings])
+        if rankings:
+            return RankingsForm(items=[rank.to_form() for rank in rankings])
             # If no rankings exist raise endpoint error.
         else:
             raise endpoints.NotFoundException('Ranking not found')
@@ -330,13 +327,13 @@ class HangmanApi(remote.Service):
     def get_game_history(self, request):
         """Returns all moves of a game"""
         #get game.
-        _game = get_by_urlsafe(request.urlsafe_game_key, Game)
-        if _game:
+        game = get_by_urlsafe(request.urlsafe_game_key, Game)
+        if game:
             # get moves of the game.
-            _moves = Move.query(Move.game == _game.key,
-                            ).order(Move.move_no).fetch()
+            moves = Move.query(Move.game == game.key,
+                               ).order(Move.move_no).fetch()
             # Return ordered moves.
-            return GameHistoryForm(items=[m.to_form_hist() for m in _moves])
+            return GameHistoryForm(items=[m.to_form_hist() for m in moves])
         else:
             raise endpoints.NotFoundException('Game not found')
 

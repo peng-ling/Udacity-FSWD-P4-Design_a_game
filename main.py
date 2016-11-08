@@ -15,25 +15,25 @@ class SendReminderEmail(webapp2.RequestHandler):
     def get(self):
         """Send a reminder email to each User with an email about games.
         Called every hour using a cron job"""
-        _user_with_unfinished_games = []
-        _app_id = app_identity.get_application_id()
-        _users = User.query(User.email != None)
-        _games = Game.query(Game.game_over == False).fetch()
+        user_with_unfinished_games = []
+        app_id = app_identity.get_application_id()
+        users = User.query(User.email != None)
+        games = Game.query(Game.game_over == False).fetch()
 
 
-        for _g in _games:
-            _user_with_unfinished_games.append(_g.user)
+        for g in games:
+            user_with_unfinished_games.append(g.user)
 
-        for _user in _users:
-            if _user.key in _user_with_unfinished_games:
-                _subject = 'This is a reminder!'
-                _body = 'Hello {}, you have an unfinished hangman game! Go ahead and be a winner!'.format(_user.name)
+        for user in users:
+            if user.key in user_with_unfinished_games:
+                subject = 'This is a reminder!'
+                body = 'Hello {}, you have an unfinished hangman game! Go ahead and be a winner!'.format(user.name)
                 # This will send test emails, the arguments to send_mail are:
                 # from, to, subject, body
-                mail.send_mail('noreply@{}.appspotmail.com'.format(_app_id),
-                           _user.email,
-                           _subject,
-                           _body)
+                mail.send_mail('noreply@{}.appspotmail.com'.format(app_id),
+                           user.email,
+                           subject,
+                           body)
 
 
 class UpdateAverageMovesRemaining(webapp2.RequestHandler):

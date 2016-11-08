@@ -137,7 +137,7 @@ class Move(ndb.Model):
     guess = ndb.StringProperty(required=True)
     matchresult = ndb.StringProperty(required=True)
 
-    def to_form(self, message):
+    def to_form(self):
         form = MoveForm()
 
         form.urlsafe_key = self.key.urlsafe(),
@@ -184,7 +184,8 @@ class Ranking(ndb.Model):
     user = ndb.KeyProperty(required=True, kind='User')
 
     def to_form(self):
-        return RankingForm(player_name = self.player_name, player_ranking = self.player_ranking)
+        return RankingForm(player_name = self.player_name,\
+            player_ranking = self.player_ranking)
 
 class RankingForm(messages.Message):
     player_name = messages.StringField(1)
