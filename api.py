@@ -224,7 +224,8 @@ class HangmanApi(remote.Service):
             a = GamesForm(message='User does not exist!')
             return a
         # In case user has been found, get all his games.
-        _games = Game.query(Game.user == cur_useres.key)
+        _games = Game.query(Game.user == cur_useres.key, \
+        Game.game_over == False)
         # Return useres games.
         return GamesForm(items=[g.to_form(None, None, None) for g in _games])
 
