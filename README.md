@@ -35,6 +35,33 @@ https://support.google.com/chrome/answer/1342714?hl=en
 3. After successfully deployment of the app, you can access it by opening
 
 
+## How to play the game
+
+First requirement to play hangman is to create a user, this can be done by create_user endpoint.
+A user name is mandatory, the email is optional. In case you provide an email you
+will receive a remainder email in case you have unfinished games every 24 hours.
+
+To start a new game use the create_game endpoint. You need to provide your user name.
+Once the new game is created and the endpoint returns, make sure to remember the
+url safe key of the game as it is needed later on.
+
+To make a move submit a guess to the make_move endpoint. The Returned values will
+let you know if your guess was wright or wrong, the revealed letters, e.g.
+***a**** and the number of guesses left.
+Once the number of wrong guesses have reached its limit you will loose the game,
+if you guess the whole world with the last possible move or before you will win.
+
+A request of endpoint get_game_history will provide all moves of a game. You need
+to provide the url safe key of the game.
+
+To see your scores for each game you finished, you can request the endpoint
+get_user_scores. You need to provide your user name.
+
+The see your ranking within the high score of all player request endpoint
+get_user_rankings.
+
+To delete a unfinished game request endpoint cancel_game. You need to provide
+the url safe game key.
 
 
 ## API endpoints description
