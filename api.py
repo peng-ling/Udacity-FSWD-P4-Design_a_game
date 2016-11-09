@@ -246,7 +246,7 @@ class HangmanApi(remote.Service):
             gameover = game.query().get()
 
             # Check if game is over.
-            if gameover and gameover.game_over == True:
+            if gameover and gameover.game_over == False:
                 # get moves of that game.
                 moves = Move.query(Move.game == gameover.key).fetch()
                 # Make a list of related move entities to delete.
@@ -259,10 +259,10 @@ class HangmanApi(remote.Service):
                 return gameover.to_delete_confirmation_form('Game deleted!')
 
             # In case game is not over go here.
-            elif gameover and gameover.game_over == False:
+            elif gameover and gameover.game_over == True:
                 # Tell the user that a not ended game can not be deleted.
                 return gameover.to_delete_confirmation_form(
-                    'Cant delete Game which is not over!')
+                    'Cant delete Game which is over!')
 
         # If game was not found raise an error.
         else:
