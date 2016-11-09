@@ -234,7 +234,7 @@ class HangmanApi(remote.Service):
                       response_message=CancelGameConfirmationForm,
                       path='game/delete/{urlsafe_game_key}',
                       name='cancel_game',
-                      http_method='POST')
+                      http_method='DELETE')
     def cancel_game(self, request):
         """Cancel a game."""
         # Get game from Bigtable
