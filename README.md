@@ -68,7 +68,7 @@ the url safe game key.
 
 ### cancel_game
 
-- endpoint path: /game/delete/&lturlsafe_game_key>
+- endpoint path: /game/delete/\<urlsafe_game_key>
 - Purpose: Chancel a running game
 - HTTP method: DELETE
 - Argument: urlsafe_game_key <mandatory>
