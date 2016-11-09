@@ -47,15 +47,9 @@ def check_if_guessed_before(guess, urlsafe):
     if not moves:
         return "OK"
     # Itterate over all guessed letters and...
-    print('---------------------------------')
-    print (moves)
-    print('---------------------------------')
     for g in moves:
         # if has been guessed before return "NOK"
         # (letter has been guesed before).
-        print('*********************')
-        print(guess)
-        print(g.guess)
         if g.guess == guess:
             return "NOK"
         # Letter has not been guessed before.

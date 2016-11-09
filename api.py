@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-`
-"""api.py - Create and configure the Game API exposing the resources.
-This can also contain game logic. For more complex games it would be wise to
-move game logic to another file. Ideally the API will be simple, concerned
-primarily with communication to/from the API's users."""
+"""api.py -  Hangman Game API exposing the resources.
+"""
 
 import endpoints
 from protorpc import remote, messages
@@ -237,10 +235,12 @@ class HangmanApi(remote.Service):
                       http_method='DELETE')
     def cancel_game(self, request):
         """Cancel a game."""
-        # Get game from Bigtable
+        # Get game from Bigtable / function will return none in case no
+        # entity is found.
         game = get_by_urlsafe(request.urlsafe_game_key, Game)
 
-        # Check if game was found by url_safe_gamekey
+
+        # Check if game / entity was found by url_safe_gamekey
         if game:
             # If so execute query.
             gameover = game.query().get()
