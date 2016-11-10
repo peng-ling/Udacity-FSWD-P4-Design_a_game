@@ -57,8 +57,11 @@ to provide the url safe key of the game.
 To see your scores for each game you finished, you can request the endpoint
 get_user_scores. You need to provide your user name.
 
-The see your ranking within the high score of all player request endpoint
+To see your ranking within the high score of all player request endpoint
 get_user_rankings.
+
+To see all your games request endpoint get_user_games, you need to provide your
+user name.
 
 To delete a unfinished game request endpoint cancel_game. You need to provide
 the url safe game key.
@@ -71,17 +74,17 @@ the url safe game key.
 - endpoint path: /game/delete/\<urlsafe_game_key>
 - Purpose: Chancel a running game
 - HTTP method: DELETE
-- Argument: urlsafe_game_key <mandatory>
+- Argument: urlsafe_game_key \<mandatory>
 - return value in case of success: 'Game deleted!'
 - return value in case game could not be deleted because it's still running: 'Cant delete Game which is not over!'
 - In case game was not found an exception is thrown, with message: 'Game not found!'
 
 ### create_user
 
-- endpoint path: /user?email=[email]&user_name=<user_name>
+- endpoint path: /user?email=[email]&user_name=\<user_name>
 - Purpose: Create a new user
 - HTTP method: POST
-- Arguments: user_name <mandatory>, email [optional]
+- Arguments: user_name \<mandatory>, email [optional]
 - return value in case of success: 'User [user_name] has been success created'.
 - In case user already exists an exception is thrown, with message: 'A User with that name already exists!'
 
@@ -95,10 +98,10 @@ the url safe game key.
 
 ### get_game
 
-- endpoint path: /game/<urlsafe_game_key>
+- endpoint path: /game/\<urlsafe_game_key>
 - Purpose: Returns information on selected game
 - HTTP method: GET
-- Arguments: urlsafe_game_key <mandatory>
+- Arguments: urlsafe_game_key \<mandatory>
 - returned attributes in case of success:
   - message
   - urlsafe_key
@@ -108,10 +111,10 @@ the url safe game key.
 
 ### get_game_history
 
-- endpoint path: /gamehistory/<urlsafe_game_key>
+- endpoint path: /gamehistory/\<urlsafe_game_key>
 - Purpose: Returns every move of a specific game
 - HTTP method: GET
-- Arguments: urlsafe_game_key <mandatory>
+- Arguments: urlsafe_game_key \<mandatory>
 - returned attributes in case of success:
   - on item per move with attributes
     - move_no
@@ -134,9 +137,9 @@ the url safe game key.
 
 ### get_user_games
 
-- endpoint path: /usergames?user_name=<user_name>
+- endpoint path: /usergames?user_name=\<user_name>
 - Purpose: Returns all games of a specific user
-- Arguments: user_name <mandatory>
+- Arguments: user_name \<mandatory>
 - HTTP method: GET
 - returned attributes in case of success:
   - on item per game with attributes
@@ -160,9 +163,9 @@ the url safe game key.
 
 
 ### get_user_scores
-- endpoint path: /scores/user/<user_name>
+- endpoint path: /scores/user/\<user_name>
 - Purpose: Returns scores of all games for a specific user
-- Arguments: user_name <mandatory>
+- Arguments: user_name \<mandatory>
 - HTTP method: GET
 - returned attributes in case of success:
   - on item per game with attributes
@@ -176,7 +179,7 @@ the url safe game key.
 ### make_move
 - endpoint path: /game/<urlsafe_game_key>
 - Purpose: Posts a move with a letter guessed by the user.
-- Arguments: urlsafe_game_key <mandatory> and guessed letter <mandatory>
+- Arguments: urlsafe_game_key \<mandatory> and guessed letter \<mandatory>
 - HTTP method: POST
 - returned attributes in case of success:
   - attempts_remaining
@@ -194,7 +197,7 @@ the url safe game key.
 - endpoint path: /game
 
 - Purpose: Initiates a new game
-- Arguments: user_name <mandatory>
+- Arguments: user_name \<mandatory>
 - HTTP method: POST
 - returned attributes in case of success:
   - attempts_remaining
